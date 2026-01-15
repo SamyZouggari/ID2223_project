@@ -1,71 +1,64 @@
-# Crypto Advisor
+# 🚀 Solana Sentiment-Driven Price Predictor
 
-## Project Goal
-Build a fully autonomous AI system that predicts short/mid-term cryptocurrency price movements based on **sentiment analysis** using real-time data. The system ingests data, processes it into features, trains models, and generates predictions automatically.
+## 📌 Project Overview
+The **Solana Sentiment-Driven Price Predictor** is an end-to-end Machine Learning system that forecasts daily price movements for Solana (SOL). By fusing high-fidelity financial technical indicators with domain-specific social media sentiment analysis, the system captures both market mechanics and investor psychology.
 
-## Required Pipelines
+The project implements a modern **MLOps architecture** using **Hopsworks** as a centralized Feature Store, ensuring seamless data synchronization between historical training and real-time inference.
 
-### 1. Backfill Pipeline
-**Purpose:** Populate the system with historical data so the model has a foundation to learn from.
 
-**Components:**
-- **Data Sources:** Cryptocurrency exchanges (Binance, Coinbase, Kraken), news sources, Twitter, Reddit, crypto forums.
-- **Data Types:** 
-  - Historical price & volume data (OHLCV)
-  - Social media posts and news articles
-- **Processing Steps:**
-  1. Fetch historical market data via APIs.
-  2. Collect historical sentiment data from tweets/news.
-  3. Store in a structured format in a database (SQL, NoSQL, or cloud storage).
-
-**Tools:** Python, Airflow, Kafka (optional), Pandas, SQL/NoSQL DB.
 
 ---
 
-### 2. Feature Pipeline
-**Purpose:** Transform raw data into meaningful features for the model.
+## 🏗️ System Architecture
+The system is orchestrated through four specialized pipelines, ensuring modularity and scalability.
 
-**Example Features:**
-- **Price-based:** moving averages, volatility, RSI, momentum indicators
-- **Volume-based:** trading volume trends, liquidity metrics
-- **Sentiment-based:** positive/negative ratios from tweets/news, social engagement metrics, topic modeling
+### 1. Technical Feature Pipeline (`backfill_crypto_feature.ipynb`)
+**Goal:** Generate a rich historical foundation of technical market signals.
+* **Data Acquisition:** Ingests 5+ years of daily OHLCV (Open, High, Low, Close, Volume) data from Yahoo Finance.
+* **Feature Engineering:** Computes **40+ technical indicators**:
+    * **Trend:** Multi-window Moving Averages (7d, 30d, 50d, 200d) and MA Cross-overs.
+    * **Momentum:** RSI (Relative Strength Index) and MACD (Line, Signal, Histogram).
+    * **Volatility:** Bollinger Bands (Upper, Lower, Bandwidth) and ATR (Average True Range).
+    * **Volume Analysis:** On-Balance Volume (OBV), Volume-Price Trend (VPT), and Volume Ratios.
+    * **Temporal Features:** Day of week, month, quarter, and weekend/month-end flags to capture cyclical market patterns.
+* **Storage:** Materializes data into the `solana_crypto_features` Feature Group in Hopsworks.
 
-**Processing Steps:**
-1. Pull raw historical & real-time data from backfill/data lake.
-2. Compute technical indicators and sentiment metrics.
-3. Normalize and scale features for model training.
-4. Store features in a feature store.
+### 2. Sentiment Pipeline (`backfill_reddit_sentiment.ipynb`)
+**Goal:** Quantify "Retail Mood" using specialized Natural Language Processing.
+* **Data Extraction:** Retrieves thousands of historical posts from the `r/solana` subreddit via the Pushshift API.
+* **NLP Engine:** Utilizes **CryptoBERT**, a transformer model fine-tuned on 3.2M crypto-social posts, to classify text into **Bullish**, **Neutral**, or **Bearish** categories.
+* **Aggregation:** Daily mean sentiment scores and post volume counts are calculated to provide a unified "market pulse" feature.
 
----
+### 3. Training Pipeline (`training_pipeline.ipynb`)
+**Goal:** Optimize an AI "Brain" to find correlations between social hype and price action.
+* **Point-in-Time Join:** Merges Technical and Sentiment features on a shared `timestamp` using a Hopsworks **Feature View**.
+* **Model Architecture:** Implements an **XGBoost Regressor**, chosen for its superior performance on tabular time-series data.
+* **Performance Metrics:** The model achieved high predictive accuracy:
+    * **R-Squared:** ~0.97 (indicating the model explains 97% of the price variance).
+    * **MSE:** ~35.09.
+* **Registry:** Finalized models are versioned and stored in the Hopsworks Model Registry.
 
-### 3. Training Pipeline
-**Purpose:** Train AI models using processed features to predict future price movements.
 
-**Steps:**
-1. Load features from feature store.
-2. Split data into train/validation/test sets.
-3. Train models (e.g., LSTM, Transformer, or other time-series models).
-4. Evaluate and tune hyperparameters.
-5. Save trained models for inference.
 
-**Tools:** PyTorch, TensorFlow, Scikit-learn, MLflow.
-
----
-
-### 4. Inference Pipeline
-**Purpose:** Generate real-time predictions using the trained models.
-
-**Steps:**
-1. Ingest new real-time market and sentiment data.
-2. Transform data into features using the feature pipeline.
-3. Load the trained model and generate predictions.
-4. Output predictions for visualization or automated trading.
-
-**Tools:** FastAPI, Flask, Docker, Kubernetes (optional for scaling).
+### 4. Inference Pipeline (`inference_pipeline.ipynb`)
+**Goal:** Provide real-time actionable insights.
+* **Live Data Fetch:** Triggers a dual-fetch of the current SOL price from Yahoo Finance and the last 24 hours of Reddit discussion.
+* **Prediction:** Passes live features through the registered model to output:
+    * **Current Price** vs. **Predicted Price**.
+    * **Expected % Change** (e.g., +4.74%).
 
 ---
 
-## Notes
-- Ensure all pipelines are automated and integrated for real-time operation.
-- Logging and monitoring are essential for production stability.
-- Consider risk management before connecting predictions to trading actions.
+## 🛠️ Tech Stack
+| Category | Tools |
+| :--- | :--- |
+| **Data Sources** | `yfinance` (Market Data), Pushshift API (Reddit) |
+| **Machine Learning** | `XGBoost`, `Scikit-learn`, `Pandas`, `NumPy` |
+| **NLP** | `CryptoBERT` (HuggingFace Transformers) |
+| **MLOps** | **Hopsworks** (Feature Store & Model Registry) |
+
+
+---
+
+## 📈 Project Impact
+Unlike traditional trading bots that rely solely on price action, this system accounts for the **social momentum** that frequently drives cryptocurrency volatility. By using **CryptoBERT**, the system understands that "burning tokens" or "going to the moon" are positive signals, allowing for more nuanced predictions during intense market cycles.
