@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from src.utils.inference.inference_pipeline import run_inference
-import hopsworks
-import os
 
 # Page Configuration
 st.set_page_config(
@@ -22,22 +20,8 @@ st.markdown("""
 # Cache prediction for 24 hours (86400 seconds)
 @st.cache_data(ttl=86400)
 def get_prediction():
-    """Get latest prediction from Hopsworks"""
-    project = hopsworks.login(api_key_value=os.getenv("HOPSWORKS_API_KEY"))
-    fs = project.get_feature_store()
-    
-    fg = fs.get_feature_group("solana_predictions", version=1)
-    df = fg.read()
-    latest = df.sort_values('timestamp').iloc[-1]
-    
-    return {
-        'current_price': latest['current_price'],
-        'predicted_price': latest['predicted_price'],
-        'change_pct': latest['change_pct'],
-        'sentiment': latest['sentiment'],
-        'sentiment_count': latest['sentiment_count'],
-        'timestamp': pd.to_datetime(latest['timestamp'], unit='s')
-    }
+    """Run inference and cache for 24h"""
+    return run_inference()
 
 # Main Header
 st.title("🤖 Solana AI Advisor")
@@ -64,7 +48,7 @@ with st.spinner("🚀 Loading latest prediction..."):
                 delta=f"{result['change_pct']:+.2f}%"
             )
         with col3:
-            sentiment_score = (result['sentiment'] + 1) * 50  # Scale -1/+1 to 0-100
+            sentiment_score = (result['sentiment'] + 1) * 50
             st.metric(
                 label="Reddit Sentiment", 
                 value=f"{sentiment_score:.0f}/100",
