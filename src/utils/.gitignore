@@ -42,3 +42,5 @@ Thumbs.db
 *.h5
 *.pt
 *.pth
+
+.streamlit/secrets.toml
