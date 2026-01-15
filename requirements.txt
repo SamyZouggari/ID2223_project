@@ -1,0 +1,10 @@
+streamlit
+hopsworks
+pandas
+numpy
+yfinance
+xgboost
+scikit-learn
+transformers
+torch
+requests
