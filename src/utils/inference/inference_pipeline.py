@@ -15,11 +15,8 @@ def run_inference():
     """Run full inference pipeline and return prediction"""
     
     # Get API key
-    try:
-        api_key = st.secrets["HOPSWORKS_API_KEY"]
-    except:
-        api_key = os.getenv("HOPSWORKS_API_KEY")
-    
+    api_key = os.getenv("HOPSWORKS_API_KEY")
+
     if not api_key:
         raise ValueError("HOPSWORKS_API_KEY not found")
     
@@ -68,7 +65,10 @@ def run_inference():
     fg = None
     try:
         fg = fs.get_feature_group("solana_predictions", version=1)
-    except:
+        # Delete old data
+        fg.delete()
+        fg = None
+    except: 
         pass
 
     if fg is None:
