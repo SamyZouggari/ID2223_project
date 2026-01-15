@@ -2,22 +2,31 @@ import hopsworks
 import joblib
 import pandas as pd
 import numpy as np
-import yfinance as yf
-from datetime import datetime, timedelta
 import os
 import sys
+import streamlit as st
 from xgboost import XGBRegressor
-
-# Add utils to path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from datetime import datetime
+# Add utils to path and import reddit_scraper
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import reddit_scraper as utils
 
 def run_inference():
     """Run full inference pipeline and return prediction"""
     
+    # Get API key
+    try:
+        api_key = st.secrets["HOPSWORKS_API_KEY"]
+    except:
+        api_key = os.getenv("HOPSWORKS_API_KEY")
+    
+    if not api_key:
+        raise ValueError("HOPSWORKS_API_KEY not found")
+    
     # 1. Login to Hopsworks
-    project = hopsworks.login(api_key_value=os.getenv("HOPSWORKS_API_KEY"))
+    project = hopsworks.login(api_key_value=api_key)
     mr = project.get_model_registry()
+    fs = project.get_feature_store()
     
     # 2. Load model
     model_obj = mr.get_model("crypto_price_model", version=1)
@@ -46,11 +55,56 @@ def run_inference():
     predicted_price = model.predict(X)[0]
     change = ((predicted_price - current_price) / current_price) * 100
     
-    return {
-        'current_price': current_price,
-        'predicted_price': predicted_price,
-        'change_pct': change,
-        'sentiment': mean_sentiment,
-        'sentiment_count': count,
+    result = {
+        'current_price': float(current_price),
+        'predicted_price': float(predicted_price),
+        'change_pct': float(change),
+        'sentiment': float(mean_sentiment),
+        'sentiment_count': int(count),
         'timestamp': datetime.now()
     }
+    
+    # 7. Save to Hopsworks
+    fg = None
+    try:
+        fg = fs.get_feature_group("solana_predictions", version=1)
+    except:
+        pass
+
+    if fg is None:
+        fg = fs.create_feature_group(
+            name="solana_predictions",
+            version=1,
+            primary_key=["timestamp"],
+            event_time="timestamp",
+            online_enabled=True,
+            description="Solana price predictions with sentiment"
+        )
+
+    prediction_df = pd.DataFrame([{
+        'timestamp': int(result['timestamp'].timestamp()),
+        'current_price': result['current_price'],
+        'predicted_price': result['predicted_price'],
+        'change_pct': result['change_pct'],
+        'sentiment': result['sentiment'],
+        'sentiment_count': result['sentiment_count']
+    }])
+
+    fg.insert(prediction_df)
+    print(f"✅ Prediction saved to Hopsworks")
+    
+    return result
+
+if __name__ == "__main__":
+    print("🧪 Testing inference pipeline...")
+    try:
+        result = run_inference()
+        print(f"\n✅ SUCCESS!")
+        print(f"   Current:   ${result['current_price']:.2f}")
+        print(f"   Predicted: ${result['predicted_price']:.2f}")
+        print(f"   Change:    {result['change_pct']:+.2f}%")
+        print(f"   Sentiment: {result['sentiment']:.3f}")
+    except Exception as e:
+        print(f"\n❌ FAILED: {e}")
+        import traceback
+        traceback.print_exc()
