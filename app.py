@@ -19,7 +19,6 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Get predictions from Hopsworks
-@st.cache_data(ttl=3600)  # Cache 1 hour
 def get_latest_prediction():
     """Read latest prediction from Hopsworks"""
     
