@@ -7,10 +7,11 @@ import sys
 import streamlit as st
 from xgboost import XGBRegressor
 from datetime import datetime
+from dotenv import load_dotenv
 # Add utils to path and import reddit_scraper
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import reddit_scraper as utils
-
+sys.path.append("src/utils")
+import utils.reddit_scraper as utils
+load_dotenv()
 def run_inference():
     """Run full inference pipeline and return prediction"""
     
