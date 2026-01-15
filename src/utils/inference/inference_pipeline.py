@@ -14,7 +14,7 @@ import utils.reddit_scraper as utils
 load_dotenv()
 def run_inference():
     """Run full inference pipeline and return prediction"""
-    
+    print("DEBUG HOPSWORKS_API_KEY:", os.getenv("HOPSWORKS_API_KEY"))
     # Get API key
     api_key = os.getenv("HOPSWORKS_API_KEY")
 
