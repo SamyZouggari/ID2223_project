@@ -1,5 +1,5 @@
 streamlit
-hopsworks
+hopsworks==4.4.2
 pandas
 numpy
 yfinance
