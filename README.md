@@ -1,6 +1,6 @@
-# 🚀 Solana Sentiment-Driven Price Predictor
+# Solana Sentiment-Driven Price Predictor
 
-## 📌 Project Overview
+## Project Overview
 The **Solana Sentiment-Driven Price Predictor** is an end-to-end Machine Learning system that forecasts daily price movements for Solana (SOL). By fusing high-fidelity financial technical indicators with domain-specific social media sentiment analysis, the system captures both market mechanics and investor psychology.
 
 The project implements a modern **MLOps architecture** using **Hopsworks** as a centralized Feature Store, ensuring seamless data synchronization between historical training and real-time inference.
@@ -9,7 +9,7 @@ The project implements a modern **MLOps architecture** using **Hopsworks** as a 
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 The system is orchestrated through four specialized pipelines, ensuring modularity and scalability.
 
 ### 1. Technical Feature Pipeline (`backfill_crypto_feature.ipynb`)
@@ -49,7 +49,7 @@ The system is orchestrated through four specialized pipelines, ensuring modulari
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 | Category | Tools |
 | :--- | :--- |
 | **Data Sources** | `yfinance` (Market Data), Pushshift API (Reddit) |
@@ -60,5 +60,5 @@ The system is orchestrated through four specialized pipelines, ensuring modulari
 
 ---
 
-## 📈 Project Impact
+## Project Impact
 Unlike traditional trading bots that rely solely on price action, this system accounts for the **social momentum** that frequently drives cryptocurrency volatility. By using **CryptoBERT**, the system understands that "burning tokens" or "going to the moon" are positive signals, allowing for more nuanced predictions during intense market cycles.
