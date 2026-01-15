@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from src.utils.inference.inference_pipeline import run_inference
+import hopsworks
+import os
 
 # Page Configuration
 st.set_page_config(
@@ -17,20 +18,45 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Cache prediction for 24 hours (86400 seconds)
-@st.cache_data(ttl=86400)
-def get_prediction():
-    """Run inference and cache for 24h"""
-    return run_inference()
+# Get predictions from Hopsworks
+@st.cache_data(ttl=3600)  # Cache 1 hour
+def get_latest_prediction():
+    """Read latest prediction from Hopsworks"""
+    
+    # Get API key
+    try:
+        api_key = st.secrets["HOPSWORKS_API_KEY"]
+    except:
+        api_key = os.getenv("HOPSWORKS_API_KEY")
+    
+    # Login to Hopsworks
+    project = hopsworks.login(api_key_value=api_key)
+    fs = project.get_feature_store()
+    
+    # Read predictions
+    fg = fs.get_feature_group("solana_predictions", version=1)
+    predictions = fg.read()
+    
+    # Get latest
+    latest = predictions.sort_values('timestamp').iloc[-1]
+    
+    return {
+        'current_price': float(latest['current_price']),
+        'predicted_price': float(latest['predicted_price']),
+        'change_pct': float(latest['change_pct']),
+        'sentiment': float(latest['sentiment']),
+        'sentiment_count': int(latest['sentiment_count']),
+        'timestamp': pd.to_datetime(latest['timestamp'], unit='s')
+    }
 
 # Main Header
 st.title("🤖 Solana AI Advisor")
 st.markdown(f"**Real-time price prediction using Sentiment AI** • *Updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
 
-# Run inference automatically
-with st.spinner("🚀 Loading latest prediction..."):
+# Load prediction
+with st.spinner("📊 Loading latest prediction from Hopsworks..."):
     try:
-        result = get_prediction()
+        result = get_latest_prediction()
         
         # Display results
         st.markdown("---")
@@ -71,7 +97,7 @@ with st.spinner("🚀 Loading latest prediction..."):
             st.write(f"**Reddit Posts Analyzed:** {result['sentiment_count']}")
             st.write(f"**Sentiment Score:** {result['sentiment']:.3f}")
             st.write(f"**Prediction Time:** {result['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
-            st.info("💡 Prediction updates automatically every 24 hours")
+            st.info("💡 Predictions update via backend pipeline")
         
         with col_right:
             st.subheader("🛠️ Model Info")
@@ -82,9 +108,9 @@ with st.spinner("🚀 Loading latest prediction..."):
             st.write("**Test Period:** 2024-2025")
         
     except Exception as e:
-        st.error(f"❌ Prediction failed: {str(e)}")
-        st.info("Please check logs or try refreshing the page.")
+        st.error(f"❌ Failed to load prediction: {str(e)}")
+        st.info("Backend pipeline may need to save a prediction first.")
 
 # Footer
 st.markdown("---")
-st.caption("🔄 Data refreshes every 24 hours automatically • Built with Streamlit + Hopsworks + CryptoBERT")
+st.caption("🔄 Reading predictions from Hopsworks • Built with Streamlit + Hopsworks + CryptoBERT")
