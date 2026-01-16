@@ -89,7 +89,7 @@ def fetch_pushshift_posts(subreddit, start_date, end_date, limit=100):
     start_ts = int(datetime.strptime(start_date, '%Y-%m-%d').timestamp())
     end_ts = int(datetime.strptime(end_date, '%Y-%m-%d').timestamp())
     
-    url = "https://api.pullpush.io/reddit/search/submission"  # New Pushshift mirror
+    url = "https://api.pullpush.io/reddit/search/submission" 
     
     all_posts = []
     after = start_ts
@@ -129,10 +129,10 @@ def fetch_pushshift_posts(subreddit, start_date, end_date, limit=100):
             after = posts[-1]['created_utc'] + 1
             
             print(f"   Fetched {len(posts)} posts (total: {len(all_posts)})")
-            time.sleep(3)  # Rate limiting - increased to avoid API blocking
+            time.sleep(3)  # Rate limiting 
             
         except Exception as e:
-            print(f"   ❌ Error: {e}")
+            print(f"   Error: {e}")
             break
     
     return all_posts
