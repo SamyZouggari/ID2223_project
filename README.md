@@ -1,5 +1,5 @@
 # Solana Sentiment-Driven Price Predictor
-
+The URL fro this project is : https://id2223project-solana-advisor.streamlit.app/
 ## Project Overview
 The **Solana Sentiment-Driven Price Predictor** is an end-to-end Machine Learning system that forecasts daily price movements for Solana (SOL). By fusing high-fidelity financial technical indicators with domain-specific social media sentiment analysis, the system captures both market mechanics and investor psychology.
 
